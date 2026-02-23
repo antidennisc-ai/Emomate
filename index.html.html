@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情緒隊友 EmoMate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf6ef;
+    --bg2: #fff8f2;
+    --ink: #1a1008;
+    --ink2: #4a3828;
+    --rose: #e8614a;
+    --rose-light: #fde8e3;
+    --amber: #f5a623;
+    --mint: #3db88a;
+    --mint-light: #d5f2e8;
+    --peach: #f9d0bc;
+    --card: #ffffff;
+    --border: #e8d5c4;
+    --shadow: rgba(180, 100, 60, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(253,246,239,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px;
+  }
+  .logo {
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 900; font-size: 1.25rem;
+    color: var(--rose);
+    letter-spacing: .02em;
+  }
+  .logo span { color: var(--ink2); }
+  .level-badge {
+    background: var(--rose); color: white;
+    font-size: .7rem; font-weight: 500;
+    padding: 4px 12px; border-radius: 99px;
+    letter-spacing: .05em;
+  }
+  .xp-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .xp-bar {
+    width: 90px; height: 6px;
+    background: var(--peach); border-radius: 99px; overflow: hidden;
+  }
+  .xp-fill {
+    width: 62%; height: 100%;
+    background: linear-gradient(90deg, var(--rose), var(--amber));
+    border-radius: 99px;
+    animation: xpPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes xpPulse { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 2px solid var(--border);
+    padding: 0 24px;
+    background: var(--bg2);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 20px; cursor: pointer;
+    font-size: .85rem; font-weight: 500;
+    color: var(--ink2); border: none; background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px; white-space: nowrap;
+    transition: all .2s;
+  }
+  .tab.active { color: var(--rose); border-bottom-color: var(--rose); }
+  .tab:hover { color: var(--rose); }
+
+  /* ─── SECTIONS ─── */
+  .section { display: none; padding: 28px 24px; max-width: 680px; margin: 0 auto; }
+  .section.active { display: block; }
+
+  /* ─── HERO ─── */
+  .hero {
+    background: linear-gradient(135deg, var(--rose-light) 0%, var(--peach) 60%, var(--bg) 100%);
+    border-radius: 20px; padding: 32px 28px; margin-bottom: 28px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '♡'; position: absolute;
+    right: 24px; top: 18px;
+    font-size: 4rem; opacity: .12;
+    animation: floatHeart 4s ease-in-out infinite;
+  }
+  @keyframes floatHeart { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .hero h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1.55rem; font-weight: 900;
+    line-height: 1.35; margin-bottom: 10px;
+    color: var(--ink);
+  }
+  .hero p { font-size: .9rem; color: var(--ink2); line-height: 1.7; }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 16px var(--shadow);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px var(--shadow); }
+
+  .card-tag {
+    display: inline-block;
+    font-size: .7rem; font-weight: 500; letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 10px; border-radius: 99px;
+    margin-bottom: 12px;
+  }
+  .tag-rose { background: var(--rose-light); color: var(--rose); }
+  .tag-mint { background: var(--mint-light); color: var(--mint); }
+  .tag-amber { background: #fef3d0; color: #b07d00; }
+
+  .card h3 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1.05rem; font-weight: 700;
+    margin-bottom: 8px; line-height: 1.4;
+  }
+  .card p { font-size: .88rem; color: var(--ink2); line-height: 1.7; }
+
+  /* ─── MISSION ─── */
+  .mission-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 18px;
+    margin-bottom: 12px;
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .mission-item.done { opacity: .55; background: var(--bg); }
+  .mission-item:hover { border-color: var(--rose); }
+  .mission-check {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+    transition: all .25s;
+  }
+  .mission-item.done .mission-check {
+    background: var(--mint); border-color: var(--mint); color: white;
+    font-size: .8rem;
+  }
+  .mission-text { flex: 1; }
+  .mission-text strong { font-size: .92rem; display: block; margin-bottom: 4px; }
+  .mission-text span { font-size: .8rem; color: var(--ink2); }
+  .mission-pts {
+    font-size: .72rem; font-weight: 700; color: var(--amber);
+    margin-top: 6px; display: block;
+  }
+
+  /* ─── COACH ─── */
+  .coach-input-wrap { position: relative; margin-bottom: 16px; }
+  .coach-input {
+    width: 100%; padding: 14px 16px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: .9rem; line-height: 1.6;
+    border: 2px solid var(--border); border-radius: 14px;
+    background: var(--card); color: var(--ink);
+    resize: none; outline: none;
+    transition: border-color .2s;
+    min-height: 90px;
+  }
+  .coach-input:focus { border-color: var(--rose); }
+  .coach-input::placeholder { color: #bba899; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 12px; border: none;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: .88rem; font-weight: 500; cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-primary {
+    background: var(--rose); color: white;
+    box-shadow: 0 4px 16px rgba(232,97,74,.3);
+  }
+  .btn-primary:hover { background: #d94f38; transform: translateY(-1px); }
+  .btn-ghost { background: var(--rose-light); color: var(--rose); }
+  .btn-ghost:hover { background: var(--peach); }
+
+  .emotion-tag {
+    display: inline-block;
+    background: var(--mint-light); color: var(--mint);
+    font-size: .75rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 99px;
+    margin-bottom: 14px;
+  }
+
+  .reply-option {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .reply-option:hover { border-color: var(--rose); background: var(--rose-light); }
+  .reply-option-label {
+    font-size: .72rem; font-weight: 700; color: var(--rose);
+    text-transform: uppercase; letter-spacing: .06em;
+    margin-bottom: 6px;
+  }
+  .reply-option p { font-size: .88rem; line-height: 1.65; color: var(--ink); }
+  .reply-option .why {
+    font-size: .78rem; color: var(--ink2);
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .copy-hint {
+    font-size: .75rem; color: var(--mint);
+    text-align: right; margin-top: 4px;
+    opacity: 0; transition: opacity .2s;
+  }
+  .reply-option:hover .copy-hint { opacity: 1; }
+
+  /* ─── COURSE ─── */
+  .course-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 480px) { .course-grid { grid-template-columns: 1fr; } }
+
+  .course-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px;
+    cursor: pointer;
+    transition: all .2s; position: relative; overflow: hidden;
+  }
+  .course-card::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--rose), var(--amber));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .3s;
+  }
+  .course-card:hover::after { transform: scaleX(1); }
+  .course-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px var(--shadow); }
+  .course-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .course-card h4 { font-size: .9rem; font-weight: 700; margin-bottom: 6px; }
+  .course-card p { font-size: .78rem; color: var(--ink2); line-height: 1.5; }
+  .course-progress {
+    margin-top: 12px; height: 4px;
+    background: var(--peach); border-radius: 99px; overflow: hidden;
+  }
+  .course-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose), var(--amber));
+    border-radius: 99px;
+  }
+  .locked { opacity: .45; cursor: not-allowed; }
+  .locked::after { display: none; }
+
+  /* ─── CALENDAR ─── */
+  .cal-event {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  .cal-date {
+    width: 48px; text-align: center; flex-shrink: 0;
+  }
+  .cal-date .day { font-size: 1.4rem; font-weight: 900; color: var(--rose); line-height: 1; }
+  .cal-date .month { font-size: .7rem; color: var(--ink2); margin-top: 2px; }
+  .cal-info strong { font-size: .9rem; display: block; margin-bottom: 3px; }
+  .cal-info p { font-size: .8rem; color: var(--ink2); line-height: 1.5; }
+  .cal-days-left {
+    margin-left: auto; font-size: .72rem; font-weight: 700;
+    padding: 4px 10px; border-radius: 99px;
+    background: var(--rose-light); color: var(--rose);
+    white-space: nowrap;
+  }
+  .cal-days-left.soon { background: #fff3cd; color: #856404; }
+
+  /* ─── STATS ─── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px; text-align: center;
+  }
+  .stat-num {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 2rem; font-weight: 900; color: var(--rose);
+  }
+  .stat-label { font-size: .78rem; color: var(--ink2); margin-top: 4px; }
+
+  .badge-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .badge {
+    text-align: center; width: 76px;
+  }
+  .badge-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; margin: 0 auto 6px;
+  }
+  .badge-earned { background: linear-gradient(135deg, var(--peach), var(--rose-light)); }
+  .badge-locked { background: #ede8e3; opacity: .4; }
+  .badge span { font-size: .72rem; color: var(--ink2); line-height: 1.3; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--ink); color: white;
+    padding: 12px 22px; border-radius: 12px;
+    font-size: .85rem; z-index: 999;
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(26,16,8,.45);
+    backdrop-filter: blur(4px);
+    z-index: 200; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 20px;
+    max-width: 480px; width: 100%;
+    padding: 32px 28px;
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(24px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal h3 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1.15rem; font-weight: 900; margin-bottom: 12px;
+  }
+  .modal p { font-size: .88rem; color: var(--ink2); line-height: 1.7; margin-bottom: 16px; }
+  .modal-choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice-btn {
+    width: 100%; padding: 13px 16px; text-align: left;
+    border: 1.5px solid var(--border); border-radius: 12px;
+    background: var(--bg); cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: .88rem; color: var(--ink);
+    transition: all .2s;
+  }
+  .choice-btn:hover { border-color: var(--rose); background: var(--rose-light); }
+  .choice-btn.correct { border-color: var(--mint); background: var(--mint-light); }
+  .choice-btn.wrong { border-color: #e74c3c; background: #fde8e8; }
+  .modal-close {
+    margin-top: 18px; width: 100%;
+    padding: 12px; border-radius: 12px; border: none;
+    background: var(--rose); color: white; cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: .88rem; font-weight: 500;
+    transition: background .2s;
+  }
+  .modal-close:hover { background: #d94f38; }
+
+  .divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+  .section-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 1rem; font-weight: 700; color: var(--ink2);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">情緒隊友 <span>EmoMate</span></div>
+  <div class="xp-bar-wrap">
+    <div class="level-badge">Lv.3 初級聆聽者</div>
+    <div class="xp-bar"><div class="xp-fill"></div></div>
+  </div>
+</nav>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('home')">🏠 首頁</button>
+  <button class="tab" onclick="showTab('coach')">💬 即時教練</button>
+  <button class="tab" onclick="showTab('mission')">✅ 今日任務</button>
+  <button class="tab" onclick="showTab('course')">📖 技能課</button>
+  <button class="tab" onclick="showTab('calendar')">📅 情緒日曆</button>
+  <button class="tab" onclick="showTab('profile')">🏅 我的成就</button>
+</div>
+
+<!-- ──── HOME ──── -->
+<div id="home" class="section active">
+  <div class="hero">
+    <h1>早安，準備好今天<br>成為她的情緒隊友了嗎？</h1>
+    <p>情緒支持是一套可以練習的技能。每天 5 分鐘，讓她感覺被真正理解。</p>
+  </div>
+
+  <div class="section-title">今日速覽</div>
+
+  <div class="card" onclick="showTab('mission')">
+    <div class="card-tag tag-rose">今日任務</div>
+    <h3>還有 1 個任務待完成</h3>
+    <p>「今天問她：你今天哪一刻最辛苦？」— 完成後記得回到這裡打卡 ✨</p>
+  </div>
+
+  <div class="card" onclick="showTab('coach')">
+    <div class="card-tag tag-mint">即時教練</div>
+    <h3>她剛剛說了什麼讓你不知如何回應？</h3>
+    <p>貼入她說的話，讓 EmoMate 給你 3 個更有情緒價值的回應方案，並附上解釋。</p>
+  </div>
+
+  <div class="card" onclick="openModal('tip')">
+    <div class="card-tag tag-amber">今日技巧</div>
+    <h3>「先重複感受，再講自己看法」</h3>
+    <p>當她說「好累啊」，不要直接說「那早點睡」。先說「聽起來你今天真的很辛苦…」，讓她知道你在聽。</p>
+  </div>
+
+  <div class="card" onclick="showTab('calendar')">
+    <div class="card-tag tag-rose">提醒</div>
+    <h3>📌 她下週一有重要簡報</h3>
+    <p>可以今晚問問她準備得怎樣，表示你記得。這種「主動 follow up」是最有效的情緒價值之一。</p>
+  </div>
+</div>
+
+<!-- ──── COACH ──── -->
+<div id="coach" class="section">
+  <div class="hero" style="margin-bottom:24px;padding:24px;">
+    <h1 style="font-size:1.25rem">即時教練</h1>
+    <p>輸入她剛說的話，EmoMate 會分析她的情緒並給你更有溫度的回應選擇。</p>
+  </div>
+
+  <div class="coach-input-wrap">
+    <textarea class="coach-input" id="herWords" placeholder="例如：「今天好累，上司又在挑剔我的報告，真的很沮喪…」"></textarea>
+  </div>
+  <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="analyzeMessage()">
+    分析並生成回應 →
+  </button>
+
+  <div id="coachResult" style="display:none; margin-top:24px;">
+    <div class="section-title">情緒分析</div>
+    <div style="margin-bottom:16px;">
+      <span class="emotion-tag" id="emotionTag">😔 委屈 + 疲憊</span>
+      <p style="font-size:.85rem;color:var(--ink2);line-height:1.65" id="emotionDesc">
+        她現在最需要的是被理解，而不是解決方案。先讓她感受到你在聽，然後才考慮提建議。
+      </p>
+    </div>
+
+    <div class="section-title">建議回應</div>
+
+    <div class="reply-option" onclick="copyText(this, '聽起來你今天真的很累又委屈…上司一直挑剔真的很令人沮喪。你辛苦了，想聊聊發生什麼事嗎？')">
+      <div class="reply-option-label">🫂 先共情 · 安慰優先</div>
+      <p>「聽起來你今天真的很累又委屈…上司一直挑剔真的很令人沮喪。你辛苦了，想聊聊發生什麼事嗎？」</p>
+      <div class="why">💡 先驗證她的感受，再開放地邀請她說更多，不急著給建議。</div>
+      <div class="copy-hint">點擊複製 →</div>
+    </div>
+
+    <div class="reply-option" onclick="copyText(this, '今天上司又讓你很不好受嗎…我現在在，你說吧，我在聽。')">
+      <div class="reply-option-label">👂 陪伴 · 給空間說話</div>
+      <p>「今天上司又讓你很不好受嗎…我現在在，你說吧，我在聽。」</p>
+      <div class="why">💡 簡短但有力。「我在聽」讓她知道你不會轉移話題或急著解決。</div>
+      <div class="copy-hint">點擊複製 →</div>
+    </div>
+
+    <div class="reply-option" onclick="copyText(this, '你在這份工作真的付出很多，上司的反應一定很讓你受挫。你已經很努力了。')">
+      <div class="reply-option-label">✨ 肯定 · 讓她感覺被看見</div>
+      <p>「你在這份工作真的付出很多，上司的反應一定很讓你受挫。你已經很努力了。」</p>
+      <div class="why">💡 肯定她的努力，而非評論上司或給建議。她需要的是被看見。</div>
+      <div class="copy-hint">點擊複製 →</div>
+    </div>
+
+    <div style="background:var(--rose-light);border-radius:12px;padding:14px 16px;margin-top:8px;">
+      <p style="font-size:.82rem;color:var(--rose);line-height:1.65">
+        ⚠️ <strong>溫馨提示：</strong>不要直接 copy，試著用自己的語氣說出來。真誠比完美更重要。
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ──── MISSION ──── -->
+<div id="mission" class="section">
+  <div class="hero" style="padding:24px;margin-bottom:24px;">
+    <h1 style="font-size:1.25rem">今日情緒任務</h1>
+    <p>小行動，大溫度。每完成一個任務，你就在成為更好的伴侶這條路上前進一步。</p>
+  </div>
+
+  <div class="section-title">待完成</div>
+
+  <div class="mission-item" onclick="completeMission(this)">
+    <div class="mission-check"></div>
+    <div class="mission-text">
+      <strong>問她一個開放式問題</strong>
+      <span>今天問她：「你今天哪一刻最辛苦？」— 然後認真聽，不急著回答。</span>
+      <span class="mission-pts">+ 20 pts</span>
+    </div>
+  </div>
+
+  <div class="mission-item" onclick="completeMission(this)">
+    <div class="mission-check"></div>
+    <div class="mission-text">
+      <strong>主動 Follow up 上週的事</strong>
+      <span>她上週提過朋友之間的事，今天問問她：「那件事後來怎麼樣了？」</span>
+      <span class="mission-pts">+ 30 pts</span>
+    </div>
+  </div>
+
+  <div class="mission-item done" onclick="completeMission(this)">
+    <div class="mission-check">✓</div>
+    <div class="mission-text">
+      <strong>早上發一條暖心訊息</strong>
+      <span>已完成！你今天早上主動關心她了 💛</span>
+      <span class="mission-pts">✓ + 15 pts 已獲得</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <div class="section-title">明日預告</div>
+
+  <div class="mission-item" style="opacity:.55;cursor:default">
+    <div class="mission-check"></div>
+    <div class="mission-text">
+      <strong>🔒 為她做一件不被要求的小事</strong>
+      <span>記錄下來你做了什麼，感受一下主動付出的感覺。</span>
+      <span class="mission-pts">+ 25 pts</span>
+    </div>
+  </div>
+</div>
+
+<!-- ──── COURSE ──── -->
+<div id="course" class="section">
+  <div class="hero" style="padding:24px;margin-bottom:24px;">
+    <h1 style="font-size:1.25rem">情緒價值技能課</h1>
+    <p>每課 3–5 分鐘，學一個具體技能。學完後解鎖對應的任務和句式。</p>
+  </div>
+
+  <div class="section-title">進行中</div>
+  <div class="course-grid">
+    <div class="course-card" onclick="openModal('course1')">
+      <div class="course-icon">👂</div>
+      <h4>什麼是情緒驗證？</h4>
+      <p>三句讓她感覺「被懂」的萬用句。</p>
+      <div class="course-progress"><div class="course-progress-fill" style="width:80%"></div></div>
+    </div>
+    <div class="course-card" onclick="openModal('course2')">
+      <div class="course-icon">🗣️</div>
+      <h4>先共情，後建議</h4>
+      <p>如何避免變成「道理人」。</p>
+      <div class="course-progress"><div class="course-progress-fill" style="width:40%"></div></div>
+    </div>
+    <div class="course-card" onclick="openModal('course3')">
+      <div class="course-icon">❓</div>
+      <h4>開放式問題的魔法</h4>
+      <p>問法不同，她說的完全不同。</p>
+      <div class="course-progress"><div class="course-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="course-card locked">
+      <div class="course-icon">🔒</div>
+      <h4>如何在她生氣時不激化</h4>
+      <p>完成前三課後解鎖。</p>
+      <div class="course-progress"><div class="course-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="course-card locked">
+      <div class="course-icon">🔒</div>
+      <h4>記住她說過的事</h4>
+      <p>完成前三課後解鎖。</p>
+      <div class="course-progress"><div class="course-progress-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ──── CALENDAR ──── -->
+<div id="calendar" class="section">
+  <div class="hero" style="padding:24px;margin-bottom:24px;">
+    <h1 style="font-size:1.25rem">情緒日曆</h1>
+    <p>記住她的重要日子，在對的時刻出現，比任何禮物都更有情緒價值。</p>
+  </div>
+
+  <div class="section-title">即將到來</div>
+
+  <div class="cal-event">
+    <div class="cal-date"><div class="day">24</div><div class="month">FEB</div></div>
+    <div class="cal-info">
+      <strong>她的重要簡報</strong>
+      <p>EmoMate 建議：今晚問她準備得怎樣，明早發一條「你一定可以的」。</p>
+    </div>
+    <div class="cal-days-left soon">明天</div>
+  </div>
+
+  <div class="cal-event">
+    <div class="cal-date"><div class="day">01</div><div class="month">MAR</div></div>
+    <div class="cal-info">
+      <strong>在一起紀念日 🥂</strong>
+      <p>EmoMate 建議：提前 3 天訂好位或計劃，讓她知道你沒有忘記。</p>
+    </div>
+    <div class="cal-days-left">6 天後</div>
+  </div>
+
+  <div class="cal-event">
+    <div class="cal-date"><div class="day">15</div><div class="month">MAR</div></div>
+    <div class="cal-info">
+      <strong>她媽媽生日</strong>
+      <p>問問她有沒有為媽媽準備什麼，或者你可以一起想。</p>
+    </div>
+    <div class="cal-days-left">20 天後</div>
+  </div>
+
+  <hr class="divider">
+
+  <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="showToast('功能開發中，敬請期待 ✨')">
+    ＋ 新增重要日子
+  </button>
+</div>
+
+<!-- ──── PROFILE ──── -->
+<div id="profile" class="section">
+  <div class="hero" style="padding:24px;margin-bottom:24px;">
+    <h1 style="font-size:1.25rem">我的成就</h1>
+    <p>你的每一步進步都被記錄在這裡。</p>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">連續打卡天數</div></div>
+    <div class="stat-card"><div class="stat-num">38</div><div class="stat-label">完成任務數</div></div>
+    <div class="stat-card"><div class="stat-num">7.5</div><div class="stat-label">她的被理解感（/10）</div></div>
+    <div class="stat-card"><div class="stat-num">840</div><div class="stat-label">情緒價值點數</div></div>
+  </div>
+
+  <div class="section-title">成就徽章</div>
+  <div class="badge-row">
+    <div class="badge">
+      <div class="badge-icon badge-earned">🔥</div>
+      <span>連續 7 天<br>打卡</span>
+    </div>
+    <div class="badge">
+      <div class="badge-icon badge-earned">👂</div>
+      <span>第一次<br>先共情</span>
+    </div>
+    <div class="badge">
+      <div class="badge-icon badge-earned">💌</div>
+      <span>主動發<br>暖心訊息</span>
+    </div>
+    <div class="badge">
+      <div class="badge-icon badge-locked">🌟</div>
+      <span>連續 30 天<br>打卡</span>
+    </div>
+    <div class="badge">
+      <div class="badge-icon badge-locked">💑</div>
+      <span>完成全部<br>5 堂課</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">她的雷區 & 喜好</div>
+  <div class="card" style="cursor:default">
+    <p style="font-size:.85rem;line-height:1.8;color:var(--ink2)">
+      💚 <strong>喜歡的安慰方式：</strong>先抱抱，再說話<br>
+      ⚡ <strong>雷區：</strong>不要說「別想太多」「你太敏感了」<br>
+      📝 <strong>她最近關心：</strong>工作升遷、身體健康
+    </p>
+  </div>
+  <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:4px" onclick="showToast('邀請她填寫喜好檔案的功能開發中 ✨')">
+    邀請她填寫喜好檔案
+  </button>
+</div>
+
+<!-- ──── MODAL ──── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent">
+    <h3 id="modalTitle">今日技巧</h3>
+    <p id="modalBody"></p>
+    <div class="modal-choices" id="modalChoices"></div>
+    <button class="modal-close" onclick="closeModal()">了解了 ✓</button>
+  </div>
+</div>
+
+<!-- ──── TOAST ──── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── TABS ───
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const tabs = ['home','coach','mission','course','calendar','profile'];
+  const idx = tabs.indexOf(id);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ─── MISSIONS ───
+function completeMission(el) {
+  if(el.classList.contains('done')) return;
+  el.classList.add('done');
+  el.querySelector('.mission-check').textContent = '✓';
+  showToast('任務完成！+20 pts 🎉');
+}
+
+// ─── COACH ───
+const scenarios = [
+  {
+    keywords: ['上司','老闆','工作','報告','簡報'],
+    emotion: '😔 委屈 + 職場壓力',
+    desc: '她現在最需要的是被理解和支持，而不是解決方案。先讓她感受到你在聽。',
+    replies: [
+      { label:'🫂 先共情 · 安慰優先', text:'「聽起來你今天真的很累又委屈…上司一直挑剔真的很令人沮喪。你辛苦了，想聊聊發生什麼事嗎？」', why:'先驗證她的感受，再開放地邀請她說更多，不急著給建議。' },
+      { label:'👂 陪伴 · 給空間說話', text:'「上司讓你很不好受嗎…我現在在，你說吧，我在聽。」', why:'簡短但有力。「我在聽」讓她知道你不會轉移話題。' },
+      { label:'✨ 肯定 · 讓她感覺被看見', text:'「你在這份工作真的付出很多，上司的反應一定很讓你受挫。你已經很努力了。」', why:'肯定她的努力，而非評論上司或給建議。她需要的是被看見。' }
+    ]
+  },
+  {
+    keywords: ['朋友','閨蜜','吵架','誤會'],
+    emotion: '😟 委屈 + 孤獨感',
+    desc: '朋友之間的衝突很傷心，她可能需要的是被認可她的感受，不需要你評論誰對誰錯。',
+    replies: [
+      { label:'🫂 認可感受', text:'「朋友吵架真的很難受，特別是很要好的人。你今天一定很不好受。」', why:'不評判雙方，先專注在她的感受上。' },
+      { label:'👂 讓她說出來', text:'「發生什麼事了？跟我說說，我在聽。」', why:'簡單但邀請她主動說，讓她主導。' },
+      { label:'💛 陪她想', text:'「如果你想的話，我們可以一起想想怎麼面對，但不急，先說說你心裡的感受？」', why:'先陪伴情緒，再提議一起解決，順序很重要。' }
+    ]
+  },
+  {
+    keywords: ['好累','累死','好辛苦','太累'],
+    emotion: '😩 身心疲憊',
+    desc: '她說累，可能是身體累，也可能是心累。先問清楚，再表達關心。',
+    replies: [
+      { label:'🫂 先感同身受', text:'「看到你說好累，我有點心疼…是身體累還是心累，還是兩者都有？」', why:'主動想了解她的狀況，而不是直接說「那早點睡」。' },
+      { label:'💛 表達在意', text:'「你今天辛苦了。不管發生什麼，我都在這裡陪你。」', why:'簡單、溫暖，讓她知道她不是一個人。' },
+      { label:'👂 邀請她分享', text:'「是發生了什麼嗎？想說說嗎，我想聽。」', why:'給她空間選擇要不要說，不強迫，但表達願意聽。' }
+    ]
+  }
+];
+
+function analyzeMessage() {
+  const input = document.getElementById('herWords').value.trim();
+  if(!input) { showToast('請輸入她說的話 💬'); return; }
+
+  let matched = null;
+  for(const s of scenarios) {
+    if(s.keywords.some(k => input.includes(k))) { matched = s; break; }
+  }
+  if(!matched) matched = scenarios[0];
+
+  document.getElementById('emotionTag').textContent = matched.emotion;
+  document.getElementById('emotionDesc').textContent = matched.desc;
+
+  const resultEl = document.getElementById('coachResult');
+  // Remove old reply options except first 3 (from HTML), rebuild
+  const oldOptions = resultEl.querySelectorAll('.reply-option');
+  oldOptions.forEach(o => o.remove());
+
+  const warn = resultEl.querySelector('div[style*="rose-light"]');
+
+  matched.replies.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'reply-option';
+    div.onclick = function(){ copyText(this, r.text.replace(/「|」/g,'')); };
+    div.innerHTML = `
+      <div class="reply-option-label">${r.label}</div>
+      <p>${r.text}</p>
+      <div class="why">💡 ${r.why}</div>
+      <div class="copy-hint">點擊複製 →</div>`;
+    resultEl.insertBefore(div, warn);
+  });
+
+  resultEl.style.display = 'block';
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copyText(el, text) {
+  navigator.clipboard.writeText(text).catch(()=>{});
+  showToast('已複製！記得用自己的語氣說 💬');
+}
+
+// ─── MODALS ───
+const modals = {
+  tip: {
+    title: '今日技巧：先重複感受',
+    body: '當她說「好累啊」，她其實在說：「我需要你看見我。」\n\n先重複她的感受，例如「聽起來你今天真的很累」，這就是情緒驗證。這比直接給建議，讓她感覺更被理解。\n\n試試看今天對她用一次這個技巧！',
+    choices: []
+  },
+  course1: {
+    title: '什麼是情緒驗證？',
+    body: '情緒驗證就是讓對方感覺「你的感受是真實且被接受的」。\n\n測試一下：她說「今天跟同事鬧彆扭，好煩」，你應該怎麼回？',
+    choices: [
+      { text:'「那你下次小心點說話。」', correct: false, feedback:'這是建議，不是驗證。她現在需要的不是改進方案。' },
+      { text:'「聽起來你今天被搞得很煩，發生什麼事了嗎？」', correct: true, feedback:'✅ 答對了！你先驗證了她的感受（很煩），然後邀請她說更多。' },
+      { text:'「那個同事一定是有問題的。」', correct: false, feedback:'雖然幫她說話，但跳過了她的感受，可能讓對話變成八卦而非支持。' }
+    ]
+  },
+  course2: {
+    title: '先共情，後建議',
+    body: '「你說我只會講大道理」——這是很多男友聽過的話。\n\n問題不是你不對，是順序不對。\n\n練習題：她說「我媽又在催我相親了，好煩。」你應該先說什麼？',
+    choices: [
+      { text:'「你跟她解釋你不需要就好了。」', correct: false, feedback:'直接給建議，但她可能只是想被理解，還沒準備好解決問題。' },
+      { text:'「你家人的壓力真的讓你很辛苦。」', correct: true, feedback:'✅ 先共情！先讓她感覺被理解，之後如果她想聊解決方案，你再說。' },
+      { text:'「那你去見一下又如何？」', correct: false, feedback:'這讓她感覺你也站在催她的那一邊，很難受。' }
+    ]
+  },
+  course3: {
+    title: '開放式問題的魔法',
+    body: '封閉式問題：「你今天還好嗎？」→ 答案：「還好。」\n\n開放式問題：「你今天最難熬的一刻是什麼時候？」→ 她才真的會說。\n\n試試看哪個是更好的開放式問法：',
+    choices: [
+      { text:'「你今天開心嗎？」', correct: false, feedback:'這是封閉式問題，她只需要回答「開心/不開心」。' },
+      { text:'「今天有什麼讓你覺得累或不舒服的事嗎？」', correct: true, feedback:'✅ 開放式問題，邀請她說更多，而且讓她感覺你想了解她的狀態。' },
+      { text:'「你今天有沒有發生什麼事？」', correct: false, feedback:'雖然是開放式，但太模糊，她可能不知道要說什麼。' }
+    ]
+  }
+};
+
+let selectedChoice = null;
+function openModal(key) {
+  const m = modals[key];
+  document.getElementById('modalTitle').textContent = m.title;
+  document.getElementById('modalBody').textContent = m.body;
+  const choicesEl = document.getElementById('modalChoices');
+  choicesEl.innerHTML = '';
+  selectedChoice = null;
+  m.choices.forEach((c,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c.text;
+    btn.onclick = function() {
+      if(selectedChoice !== null) return;
+      selectedChoice = i;
+      document.querySelectorAll('.choice-btn').forEach((b,j) => {
+        b.classList.remove('correct','wrong');
+        if(j === i) b.classList.add(c.correct ? 'correct' : 'wrong');
+      });
+      showToast(c.feedback);
+    };
+    choicesEl.appendChild(btn);
+  });
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e) {
+  if(e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ─── TOAST ───
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
